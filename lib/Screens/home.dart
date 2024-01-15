@@ -11,6 +11,33 @@ import 'package:pomodoro/componant/showModal.dart';
 import 'package:pomodoro/service/Firestore.dart';
 import 'package:pomodoro/service/auth.dart';
 
+class TimerController {
+  late Timer _timer;
+  int _elapsedSeconds = 0;
+
+  void _startTimer(Function(int minutes, int seconds) updateCallback) {
+    _timer = Timer.periodic(Duration(seconds: 1), (Timer timer) {
+      _elapsedSeconds++;
+      int minutes = _elapsedSeconds ~/ 60;
+      int seconds = _elapsedSeconds % 60;
+      updateCallback(minutes, seconds);
+    });
+  }
+
+  void _pauseTimer() {
+    if (_timer.isActive) {
+      _timer.cancel();
+    }
+  }
+
+  void _resetTimer() {
+    if (_timer.isActive) {
+      _timer.cancel();
+    }
+    _elapsedSeconds = 0;
+  }
+}
+
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
 
@@ -19,6 +46,16 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  void updateTimer(int newMinutes, int newSeconds) {
+    setState(() {
+      minutes = newMinutes;
+      seconds = newSeconds;
+    });
+  }
+
+  TimerController timerController = TimerController();
+  int minutes = 0;
+  int seconds = 0;
   String timer = "25:00";
   Map defaultcolors = {
     "primary": Color(0xffF87373),
@@ -50,11 +87,6 @@ class _HomePageState extends State<HomePage> {
   Show show = Show();
 
   void addTime() {}
-
-  void _startTimer() {}
-
-  void _pauseTimer() {}
-  void _resetTimer() {}
 
   @override
   Widget build(BuildContext context) {
@@ -94,8 +126,9 @@ class _HomePageState extends State<HomePage> {
                       TextButton(
                           onPressed: () {
                             setState(() {
+                              //25
                               defaultcolors = pomodorocolors;
-                              timer = "25:00";
+                              timer = "$minutes:$seconds";
                             });
                           },
                           child: Text("Pomodoro",
@@ -105,8 +138,9 @@ class _HomePageState extends State<HomePage> {
                       TextButton(
                           onPressed: () {
                             setState(() {
+                              //5
                               defaultcolors = shortBreakcolors;
-                              timer = "5:00";
+                              timer = "$minutes:$seconds";
                             });
                           },
                           child: Text("Short Break",
@@ -116,8 +150,9 @@ class _HomePageState extends State<HomePage> {
                       TextButton(
                           onPressed: () {
                             setState(() {
+                              //15
                               defaultcolors = longBreakcolors;
-                              timer = "15:00";
+                              timer = "$minutes:$seconds";
                             });
                           },
                           child: Text(
@@ -129,19 +164,49 @@ class _HomePageState extends State<HomePage> {
                     ],
                   ),
                   Text(
-                    "$timer",
+                    "$minutes:$seconds",
                     style: TextStyle(fontSize: 80, color: Colors.white),
                   ),
                   SizedBox(
                     height: 20,
                   ),
-                  ElevatedButton(
-                    onPressed: () {},
-                    child: Text("START"),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: defaultcolors["button_start"],
-                      minimumSize: Size(100, 45),
-                    ),
+                  Row(
+                    children: [
+                      ElevatedButton(
+                        onPressed: () {
+                          setState(() {});
+                          timerController._startTimer(updateTimer);
+                        },
+                        child: Text("START"),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: defaultcolors["button_start"],
+                          minimumSize: Size(100, 45),
+                        ),
+                      ),
+                      ElevatedButton(
+                        onPressed: () {
+                          setState(() {});
+                          timerController._pauseTimer();
+                        },
+                        child: Text("Puse"),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: defaultcolors["button_start"],
+                          minimumSize: Size(100, 45),
+                        ),
+                      ),
+                      ElevatedButton(
+                        onPressed: () {
+                          setState(() {});
+                          timerController._resetTimer();
+                          updateTimer(0, 0);
+                        },
+                        child: Text("Reast"),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: defaultcolors["button_start"],
+                          minimumSize: Size(100, 45),
+                        ),
+                      ),
+                    ],
                   )
                 ],
               ),
@@ -176,7 +241,6 @@ class _HomePageState extends State<HomePage> {
                         return ListView.builder(
                           itemCount: snapshot.data?.docs.length,
                           itemBuilder: (context, index) {
-
                             return bulidTask(snapshot.data!.docs[index]);
                           },
                         );
